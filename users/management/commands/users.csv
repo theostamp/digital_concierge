@@ -1,0 +1,3 @@
+username,email,password,role,phone
+john.doe,john@example.com,pass123,resident,6901234567
+maria.manager,maria@example.com,managerpass,manager,6945678912
