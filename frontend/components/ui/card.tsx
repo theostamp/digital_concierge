@@ -3,14 +3,14 @@
 import { ReactNode } from "react";
 
 interface CardProps {
-  readonly children: ReactNode;
-  readonly className?: string;
+  children: ReactNode;
+  className?: string;
 }
 
-export function Card({ children, className }: CardProps) {
+export function UICard({ children, className }: CardProps) {
   return <div className={`rounded-xl border bg-white ${className}`}>{children}</div>;
 }
 
-export function CardContent({ children, className }: CardProps) {
+export function UICardContent({ children, className }: CardProps) {
   return <div className={`p-4 ${className}`}>{children}</div>;
 }
