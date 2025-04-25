@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/requests/', include('user_requests.urls')),
     path('api/users/', include('users.urls')),
     path('api/auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path("api/tenants/", include("tenants.urls")),
 
     # ✅ Προσθήκη auth routes (login, logout, password change/reset)
     path('accounts/', include('django.contrib.auth.urls')),

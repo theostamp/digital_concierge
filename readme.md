@@ -24,13 +24,14 @@ python manage.py migrate_schemas --shared
 python manage.py migrate_schemas --tenant	
 python manage.py migrate_schemas --schema=etairia1	
 
+bash scripts/setup_shared.sh
 
 
 echo "# digital_concierge" >> README.md
 git init
 
 git add .
-git commit -m "αρχικο κομιτ"
+git commit -m "1"
 git branch -M main
 git remote add origin https://github.com/theostamp/digital_concierge.git
 git push -u origin main

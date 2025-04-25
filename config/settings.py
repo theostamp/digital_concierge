@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 SHARED_APPS = [
     'django_tenants',
     'tenants',
+    'buildings',
     'django.contrib.contenttypes',
     'django.contrib.auth',  # Keep here
     'django.contrib.sessions',
@@ -58,7 +59,6 @@ SHARED_APPS = [
 ]
 
 TENANT_APPS = [
-    'buildings',
     'announcements',
     'votes',
     'user_requests',
@@ -176,3 +176,20 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Ψηφιακός Θυρω�
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+
+
+
+if DEBUG:
+    REST_FRAMEWORK = {
+        'DEFAULT_RENDERER_CLASSES': (
+            'rest_framework.renderers.JSONRenderer',
+            'rest_framework.renderers.BrowsableAPIRenderer',
+        )
+    }
+else:
+    REST_FRAMEWORK = {
+        'DEFAULT_RENDERER_CLASSES': (
+            'rest_framework.renderers.JSONRenderer',
+        )
+    }
