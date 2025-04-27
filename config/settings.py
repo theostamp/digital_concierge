@@ -36,21 +36,19 @@ ALLOWED_HOSTS = ['localhost', '.localhost']
 
 
 # Application definition
+# settings.py
 
-INSTALLED_APPS = [
-    'django_tenants',  # πριν από οτιδήποτε άλλο
-    'tenants',
-    'users.apps.UsersConfig',
-    'buildings',
-   
+
+BASE_APPS = [
+    'django_tenants',  # Φτάνει να είναι ΕΔΩ
+    'supervisor_dashboard',
 ]
 
 SHARED_APPS = [
-    'django_tenants',
     'tenants',
     'buildings',
     'django.contrib.contenttypes',
-    'django.contrib.auth',  # Keep here
+    'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.admin',
     'django.contrib.messages',
@@ -62,11 +60,13 @@ TENANT_APPS = [
     'announcements',
     'votes',
     'user_requests',
-    # Remove django.contrib.auth from here
 ]
 
+INSTALLED_APPS = BASE_APPS + SHARED_APPS + TENANT_APPS
 
-INSTALLED_APPS = SHARED_APPS + TENANT_APPS 
+
+
+
 
 
 REST_FRAMEWORK = {
@@ -76,23 +76,26 @@ REST_FRAMEWORK = {
 }
 
 
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'users.middleware.ForcePasswordChangeMiddleware',  # ➔ ΕΔΩ
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
+
 
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'backend' / 'templates'],  # ✅ ΕΔΩ ΠΡΟΣΘΕΤΟΥΜΕ το path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -173,16 +176,26 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Ψηφιακός Θυρωρός <noreply@oikodomiko.gr>')
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Για τοπικά tests (γράφει το email στο τερματικό)
+
+# Σε παραγωγή:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.yourprovider.com'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = 'you@example.com'
+# EMAIL_HOST_PASSWORD = 'yourpassword'
+# EMAIL_USE_TLS = True
+# DEFAULT_FROM_EMAIL = 'Digital Concierge <noreply@oikodomiko.gr>'
+# EMAIL_USE_SSL = False  # Αν χρησιμοποιείς SSL
+# EMAIL_TIMEOUT = 5  # Δευτερόλεπτα timeout για το SMTP
+
+
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/admin/dashboard/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 

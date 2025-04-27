@@ -2,6 +2,14 @@ cd C:\Users\thodo\digital_concierge\frontend
 
 npm run dev
 
+<!-- diagrafh olvn  -->
+
+find . -name "*.pyc" -delete
+find . -name "__pycache__" -type d -exec rm -r {} +
+
+docker compose up -d
+./scripts/reset.sh
+<!-- diagrafh olvn  -->
 
 cd C:\Users\thodo\digital_concierge
 .\setup-vscode-settings.ps1
@@ -11,27 +19,33 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\venv\Scripts\activate
 python manage.py exporttree --output dev_tree.md
 
-python manage.py makemigrations
-python manage.py makemigrations users
-python manage.py makemigrations announcements
-python manage.py makemigrations votes
-python manage.py makemigrations tenants
 
+# Αρχικά δημιουργούμε όλες τις απαραίτητες migrations
+python manage.py makemigrations
+
+# Κάνουμε migrate στη public βάση (shared apps)
 python manage.py migrate
-python manage.py migrate_schemas
-python manage.py migrate --fake-initial --run-syncdb --database=default
-python manage.py migrate_schemas --shared	
-python manage.py migrate_schemas --tenant	
-python manage.py migrate_schemas --schema=etairia1	
+
+# Κάνουμε migrate στο shared schema (δηλαδή public tables στους tenants)
+python manage.py migrate_schemas --shared
+
+# Δημιουργούμε tenants (αν δεν υπάρχουν)
+
+# Κάνουμε migrate όλα τα tenants (tenant-specific apps)
+python manage.py migrate_schemas --tenant
+
+
+
 
 bash scripts/setup_shared.sh
 
+docker-compose exec web python manage.py create_sample_tenant
 
 echo "# digital_concierge" >> README.md
 git init
 
 git add .
-git commit -m "2"
+git commit -m "working admin panel"
 git branch -M main
 git remote add origin https://github.com/theostamp/digital_concierge.git
 git push -u origin main
@@ -42,6 +56,13 @@ cd frontend
 
 npm run build
 npm run dev
+
+
+
+docker compose exec python manage.py shell < scripts/reset_and_create_tenant.py
+
+
+Get-Content scripts/reset_and_create_tenant.py | docker compose exec -T web python manage.py shell
 
 
 

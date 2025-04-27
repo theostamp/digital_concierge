@@ -1,0 +1,133 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto p-8">
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-green-100 rounded-lg shadow p-6 text-center">
+      <div class="text-green-700 text-sm mb-2">Ενεργοί</div>
+      <div class="text-3xl font-bold">{{ active_count }}</div>
+    </div>
+    <div class="bg-yellow-100 rounded-lg shadow p-6 text-center">
+      <div class="text-yellow-700 text-sm mb-2">Σε Trial</div>
+      <div class="text-3xl font-bold">{{ trial_count }}</div>
+    </div>
+    <div class="bg-red-100 rounded-lg shadow p-6 text-center">
+      <div class="text-red-700 text-sm mb-2">Προς Λήξη Trial</div>
+      <div class="text-3xl font-bold">{{ soon_to_expire_count }}</div>
+    </div>
+    <div class="bg-blue-100 rounded-lg shadow p-6 text-center">
+      <div class="text-blue-700 text-sm mb-2">Σύνολο</div>
+      <div class="text-3xl font-bold">{{ tenants_count }}</div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="flex flex-wrap gap-4 mb-8">
+    <!-- Ανανέωση -->
+    <a href="{% url 'supervisor_dashboard:supervisor-dashboard' %}" …>🔄 Ανανέωση</a>
+    <!-- Δημιουργία -->
+    <a href="/admin/tenants/client/add/" …>➕ Δημιουργία Tenant</a>
+    <!-- Εξαγωγή -->
+    <a href="{% url 'supervisor_dashboard:export-tenants' %}" …>📥 Εξαγωγή</a>
+  </div>
+
+  <!-- Search & Filters -->
+  <form method="get" action="{% url 'supervisor_dashboard:supervisor-dashboard' %}" class="flex flex-wrap gap-4 mb-8">
+    <input type="text" name="q" placeholder="Αναζήτηση..." value="{{ search_query }}" class="border rounded p-2 flex-1" />
+    <select name="status" class="border rounded p-2">
+      <option value="">Όλα</option>
+      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Ενεργοί</option>
+      <option value="trial" {% if status_filter == 'trial' %}selected{% endif %}>Trial</option>
+      <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Ανενεργοί</option>
+    </select>
+    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+      🔍 Αναζήτηση
+    </button>
+  </form>
+
+  <!-- Tenants List -->
+  <div class="bg-white p-6 rounded shadow mb-8">
+    <h2 class="text-xl font-bold mb-4">Tenants</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full table-auto">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="px-4 py-2">Όνομα</th>
+            <th class="px-4 py-2">Κατάσταση</th>
+            <th class="px-4 py-2">Ενέργειες</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tenant in tenants %}
+            <tr class="border-t">
+              <td class="px-4 py-2">{{ tenant.name }}</td>
+              <td class="px-4 py-2">
+                {% if tenant.on_trial %}
+                  <span class="text-yellow-600 font-semibold">Trial</span>
+                {% else %}
+                  <span class="text-green-600 font-semibold">Ενεργός</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2">
+                <!-- Παράταση Trial -->
+                <a href="{% url 'supervisor_dashboard:extend-trial' tenant.id %}" …>Παράταση Trial</a>
+                |
+                <!-- Απενεργοποίηση -->
+                <a href="{% url 'supervisor_dashboard:deactivate-tenant' tenant.id %}" …>Απενεργοποίηση</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="3" class="text-center p-4">Δεν βρέθηκαν tenants.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex justify-center mt-6">
+      {% if tenants.has_previous %}
+        <a href="?page={{ tenants.previous_page_number }}" class="px-3 py-1 mx-1 bg-gray-200 rounded hover:bg-gray-300">&laquo; Πίσω</a>
+      {% endif %}
+      <span class="px-3 py-1 mx-1 bg-gray-300 rounded">{{ tenants.number }}</span>
+      {% if tenants.has_next %}
+        <a href="?page={{ tenants.next_page_number }}" class="px-3 py-1 mx-1 bg-gray-200 rounded hover:bg-gray-300">Επόμενο &raquo;</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-bold mb-4">Στατιστικά Tenants</h2>
+    <canvas id="tenantChart"></canvas>
+  </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('tenantChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Ενεργοί', 'Trial'],
+      datasets: [{
+        label: 'Κατανομή Tenants',
+        data: [{{ active_count|default:"0" }}, {{ trial_count|default:"0" }}],
+        backgroundColor: ['#34D399', '#FBBF24'],
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+</script>
+{% endblock %}

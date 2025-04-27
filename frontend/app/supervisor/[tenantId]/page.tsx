@@ -4,7 +4,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { UICard, UICardContent } from "@/components/ui/card";
+import { UICard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 

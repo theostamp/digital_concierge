@@ -7,7 +7,7 @@ from django.db import models
 
 class CustomUser(AbstractUser):
     is_supervisor = models.BooleanField(default=False)
-
+    must_change_password = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.username} ({'Supervisor' if self.is_supervisor else 'Tenant User'})"
 
