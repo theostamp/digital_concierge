@@ -1,11 +1,12 @@
 # tenants/admin.py
+
 from django.contrib import admin, messages
 from django.core.management import call_command
 from django.core.mail import send_mail
 from django.conf import settings
 from django_tenants.admin import TenantAdminMixin
-
 from .models import Client, Domain
+from django.utils.translation import gettext_lazy as _
 
 @admin.register(Client)
 class ClientAdmin(TenantAdminMixin, admin.ModelAdmin):
@@ -13,14 +14,21 @@ class ClientAdmin(TenantAdminMixin, admin.ModelAdmin):
     list_filter = ("tenant_type", "on_trial")
     search_fields = ("name", "schema_name")
     ordering = ("-created_on",)
+    fields = ('schema_name', 'tenant_type', 'paid_until', 'on_trial')
 
     def save_model(self, request, obj, form, change):
         is_new = obj.pk is None
+        
+        # Όταν δημιουργούμε νέο tenant, θέτουμε το name ίδιο με το schema_name
+        obj.name = obj.schema_name
+        
         super().save_model(request, obj, form, change)
 
         if is_new:
+            # Δημιουργία schema
             obj.create_schema(check_if_exists=True, verbosity=1, sync_schema=False)
 
+            # Migration μόνο για τον νέο tenant
             call_command(
                 "migrate_schemas",
                 tenant=obj.schema_name,
@@ -28,6 +36,7 @@ class ClientAdmin(TenantAdminMixin, admin.ModelAdmin):
                 verbosity=1
             )
 
+            # Δημιουργία Domain αν δεν υπάρχει
             if not obj.domains.exists():
                 Domain.objects.create(
                     domain=f"{obj.schema_name}.localhost",
@@ -35,10 +44,10 @@ class ClientAdmin(TenantAdminMixin, admin.ModelAdmin):
                     is_primary=True
                 )
 
-            # Κάνουμε setup (groups, admin χρήστη κλπ.)
+            # Δημιουργία admin χρήστη
             admin_email, admin_password = self.setup_initial_data(obj)
 
-            # Προσθέτουμε Success Message
+            # Success μήνυμα
             messages.success(
                 request,
                 f"✅ Tenant '{obj.name}' δημιουργήθηκε! ➔ Admin login: {admin_email} / {admin_password}"
@@ -47,7 +56,6 @@ class ClientAdmin(TenantAdminMixin, admin.ModelAdmin):
     def setup_initial_data(self, tenant):
         """
         Δημιουργεί default group και superuser για το νέο tenant.
-        Επιστρέφει email και password του admin.
         """
         from django_tenants.utils import schema_context
         from django.contrib.auth import get_user_model
@@ -72,12 +80,10 @@ class ClientAdmin(TenantAdminMixin, admin.ModelAdmin):
                     is_active=True,
                 )
 
-                # Αν υπάρχει must_change_password στο μοντέλο
                 if hasattr(user, "must_change_password"):
                     user.must_change_password = True
                     user.save()
 
-                # Στέλνουμε Email με credentials
                 self.send_admin_credentials(admin_email, admin_password)
 
             return admin_email, admin_password

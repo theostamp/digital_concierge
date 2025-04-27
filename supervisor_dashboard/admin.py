@@ -28,6 +28,22 @@ class SupervisorAdminSite(admin.AdminSite):
             path('export_tenants/', self.admin_view(self.export_tenants), name='export-tenants'),
         ]
         return custom_urls + urls
+        
+    def each_context(self, request):
+        context = super().each_context(request)
+        from tenants.models import Client
+        from django.utils import timezone
+        from datetime import timedelta
+
+        soon_to_expire_count = Client.objects.filter(
+            on_trial=True,
+            paid_until__lte=timezone.now() + timedelta(days=7)
+        ).count()
+
+        context['dashboard_url'] = "/admin/dashboard/"
+        context['soon_to_expire_count'] = soon_to_expire_count
+        return context
+
 
     def dashboard_view(self, request):
         query = request.GET.get('q')

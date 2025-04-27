@@ -45,7 +45,7 @@ echo "# digital_concierge" >> README.md
 git init
 
 git add .
-git commit -m "working admin panel"
+git commit -m "working admin panel 1"
 git branch -M main
 git remote add origin https://github.com/theostamp/digital_concierge.git
 git push -u origin main
